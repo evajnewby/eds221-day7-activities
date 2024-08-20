@@ -1,0 +1,61 @@
+---
+title: "bird-joins"
+author: "Eva Newby"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+library(tidyverse)
+library(here)
+
+```
+
+## Task 1
+```{r}
+bird_observations <- read_csv(here("data", "52_pp52_birds_1.csv"))
+
+sites <- read_csv(here("data", "52_pp52_sites_1.csv"))
+
+surveys <- read_csv(here("data", "52_pp52_surveys_1.csv"))
+
+taxalist <- read_csv(here("data", "52_pp52_taxalist_1.csv"))
+```
+
+```{r}
+# Create a subset of data
+
+birds_subset <- bird_observations %>%
+  filter(species_id %in% c("BHCO", "RWBL")) %>%
+  filter(site_id %in% c("LI-W", "NU-C"))
+
+#left-join practice
+birds_left <- birds_subset %>%
+  left_join(., sites, by = "site_id") %>%
+  left_join(., taxalist, by = "species_id")
+
+#full-join practice
+#I expect it to link by "site_id"
+
+birds_full <- full_join(birds_subset, sites, by = "site_id")
+```
+
+# Task 2
+```{r}
+birds <- bird_observations %>% 
+  rename(bird_obs_notes = "notes") %>%
+  full_join(sites) %>%
+  full_join(surveys) %>%
+  full_join(taxalist) %>%
+  select(survey_date, common_name, park_name, bird_count)%>%
+  mutate(survey_month = lubridate::month(survey_date)) %>%
+  mutate(survey_month =  as.factor(survey_month))%>%
+  relocate(survey_month, .after = survey_date)
+
+birds_summary<- birds%>%
+  group_by(park_name, survey_month)%>%
+  summarize(count = n())%>%
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+```
+
